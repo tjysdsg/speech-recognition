@@ -10,7 +10,6 @@ import os
 import python_speech_features as psf
 from config import *
 from multiprocessing import Process
-from copy import copy
 
 
 def delta_feature(feat):
@@ -98,7 +97,14 @@ def test(models, folder, file_patterns):
 
 
 if __name__ == "__main__":
-    if do_train:
+    import argparse
+
+    parser = argparse.ArgumentParser(description='CLI for speech recognition functionality.')
+    parser.add_argument('action', metavar='ACTION', type=str, nargs=1, choices=['train', 'test', 'record'],
+                        help='Action to perform. Can be one of the following:\n train \n test \n record')
+    args = parser.parse_args()
+
+    if args.action[0] == 'train':
         print('training...')
         # data folder location
         folder = os.path.join(data_path, 'train')
@@ -120,7 +126,7 @@ if __name__ == "__main__":
             for p in processes:
                 p.join()
 
-    if do_test:
+    if args.action[0] == 'test':
         print('testing...')
         # get all the models from pickle files
         models = []
@@ -133,26 +139,26 @@ if __name__ == "__main__":
         # do tests, print the accuracy
         print(test(models, os.path.join(data_path, 'test'), file_patterns))
 
-    record('test.wav')
-    # get all test files using regular expresssions
-    f = 'test.wav'
+    if args.action[0] == 'record':
+        record('test.wav')
+        # get all test files using regular expressions
+        f = 'test.wav'
 
-    input = load_wav_as_mfcc(f)
+        input_audio = load_wav_as_mfcc(f)
+        # get all the models from pickle files
+        models = []
+        for digit in digit_names:
+            file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
+            models.append(pickle.load(file))
+            file.close()
 
-    # get all the models from pickle files
-    models = []
-    for digit in digit_names:
-        file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
-        models.append(pickle.load(file))
-        file.close()
-
-    best_model = 0
-    c = np.inf
-    # find the best model
-    for i in range(len(models)):
-        m = models[i]
-        cost = m.evaluate(input)
-        if cost < c:
-            c = cost
-            best_model = i
-    print(best_model)
+        best_model = 0
+        c = np.inf
+        # find the best model
+        for i in range(len(models)):
+            m = models[i]
+            cost = m.evaluate(input_audio)
+            if cost < c:
+                c = cost
+                best_model = i
+        print(best_model)
