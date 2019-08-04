@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from math import isinf
 
@@ -136,3 +137,74 @@ def dtw1(x, states, transitions, beam=np.inf):
         i, j = path_matrix[i, j]
         path.append([i, j])
     return costs, np.array(path)
+
+
+def sentence_viterbi(x, model_graph):
+    # TODO: allow arbitrary jumps between gmm states depending on the hmm model
+    """
+    :param x: input features.
+    :param model_graph: TODO: add docstring
+    :return: costs: cost matrix
+            matched_sentence: a sequence of index of models that best matches the input.
+
+    """
+    nodes = model_graph.nodes
+
+    # initialize cost matrix
+    n_cols = len(x)
+    n_rows = len(nodes)
+    costs = np.full((n_rows, n_cols), np.inf)
+    costs[0, :] = 0
+
+    path_matrix = np.zeros((n_rows, n_cols, 2), dtype=np.int)
+
+    # the end of a sentence
+    end_nodes = model_graph.curr_layer
+
+    # fill cost matrix
+    for c in range(n_cols):
+        for r in range(1, n_rows):
+            if r == 0 and c == 0:
+                continue
+            subcosts = []
+            from_points = []
+
+            if model_graph[r].extra == 'NES':
+                # the cost of non-emitting state is 0
+                node_dist = 0
+            else:
+                node_dist = model_graph[r].val.evaluate(x[c])
+
+            origins, transition_cost = model_graph.get_origins(model_graph[r])
+
+            for o in origins:
+                if model_graph[r].extra == 'NES':
+                    subcosts.append(costs[model_graph.nodes.index(o), c] + node_dist)
+                    from_points.append([model_graph.nodes.index(o), c])
+                else:
+                    subcosts.append(transition_cost + costs[model_graph.nodes.index(o), c - 1] + node_dist)
+                    from_points.append([model_graph.nodes.index(o), c - 1])
+
+                # remember path and cost
+            min_idx = np.argmin(subcosts)
+            path_matrix[r, c] = from_points[min_idx]
+            costs[r, c] = subcosts[min_idx]
+
+    # find the sentence which has the min cost
+    end_node_costs = [costs[nodes.index(n), -1] for n in end_nodes]
+    min_idx = np.argmin(end_node_costs)
+    best_end_idx = nodes.index(end_nodes[min_idx])
+    best_cost = costs[best_end_idx, -1]
+
+    # find the matched string
+    c = n_cols - 1
+    r = best_end_idx
+    matched_sentence = [nodes[r].extra]  # extra is the model index of a gmm state
+    while 1:
+        if c < 1:
+            break
+        r, c = path_matrix[r, c]
+        if r != 0:
+            matched_sentence.append(nodes[r].extra)  # extra is the model index of a gmm state
+
+    return best_cost, matched_sentence[::-1]

@@ -96,9 +96,9 @@ def test(models, folder, file_patterns):
     return n_passed / n_tests
 
 
-if __name__ == "__main__":
+def cli():
+    # parse arguments
     import argparse
-
     parser = argparse.ArgumentParser(description='CLI for speech recognition functionality.')
     parser.add_argument('action', metavar='ACTION', type=str, nargs=1, choices=['train', 'test', 'record'],
                         help='Action to perform. Can be one of the following:\n train \n test \n record')
@@ -162,3 +162,43 @@ if __name__ == "__main__":
                 c = cost
                 best_model = i
         print(best_model)
+
+
+if __name__ == "__main__":
+    # cli()
+
+    # continuous speech recognition
+    # get all the models from pickle files
+    models = []
+    for digit in digit_names:
+        file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
+        models.append(pickle.load(file))
+        file.close()
+
+    n_segments = 5
+    model_graph = LayeredHMMGraph()
+    nes0 = model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models[1:9])
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    nes1 = model_graph.add_non_emitting_state()
+
+    model_graph.add_edge(nes0, nes1)
+
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+
+    # record('test.wav')
+    # get all test files using regular expressions
+    f = 'test.wav'
+    x = load_wav_as_mfcc(f)
+    _, matched = sentence_viterbi(x, model_graph)
+    print(matched)
