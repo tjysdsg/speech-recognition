@@ -165,8 +165,6 @@ def cli():
 
 
 if __name__ == "__main__":
-    # cli()
-
     # continuous speech recognition
     # get all the models from pickle files
     models = []
@@ -175,7 +173,6 @@ if __name__ == "__main__":
         models.append(pickle.load(file))
         file.close()
 
-    n_segments = 5
     model_graph = LayeredHMMGraph()
     nes0 = model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models[1:9])
