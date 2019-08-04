@@ -107,6 +107,12 @@ class HMM:
         self.old_models = []
         self.use_em = True
 
+    def __getitem__(self, item):
+        if type(item) is int or type(item) is slice:
+            return self.gmm_states[item]
+        else:
+            raise TypeError('The type of index is not supported')
+
     def fit(self, ys, n_gaussians, use_em=True):
         """Fit the HMM model with a list of training data.
         :param use_em: if true, use both k-means and Expectation-Maximization algorithm to fit GMM, otherwise only
