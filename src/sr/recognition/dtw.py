@@ -185,7 +185,7 @@ def sentence_viterbi(x, model_graph):
                     subcosts.append(transition_cost + costs[model_graph.nodes.index(o), c - 1] + node_dist)
                     from_points.append([model_graph.nodes.index(o), c - 1])
 
-                # remember path and cost
+            # remember path and cost
             min_idx = np.argmin(subcosts)
             path_matrix[r, c] = from_points[min_idx]
             costs[r, c] = subcosts[min_idx]
