@@ -69,7 +69,11 @@ class LayeredHMMGraph(Graph):
             for j in range(0, n_segments):
                 # self loop
                 self.add_edge(gmm_nodes[j], gmm_nodes[j], val=m.transitions[j, j])
-                if j < n_segments - 1:
+                if j < n_segments - 2:
+                    # connect to the next and the one after the next node
+                    self.add_edge(gmm_nodes[j], gmm_nodes[j + 1], val=m.transitions[j + 1, j])
+                    self.add_edge(gmm_nodes[j], gmm_nodes[j + 2], val=m.transitions[j + 2, j])
+                elif j < n_segments - 1:
                     # connect to the next
                     self.add_edge(gmm_nodes[j], gmm_nodes[j + 1], val=m.transitions[j + 1, j])
                 else:

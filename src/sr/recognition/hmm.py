@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import numpy as np
 import copy
 import scipy
@@ -105,6 +104,7 @@ class HMM:
         self.segments = []
         self.gmm_states = None
         self.old_models = []
+        self.use_gmm = True
         self.use_em = True
 
     def __getitem__(self, item):
@@ -113,8 +113,9 @@ class HMM:
         else:
             raise TypeError('The type of index is not supported')
 
-    def fit(self, ys, n_gaussians, use_em=True):
+    def fit(self, ys, n_gaussians, use_gmm=True, use_em=True):
         """Fit the HMM model with a list of training data.
+        :param use_gmm: TODO: add docstring
         :param use_em: if true, use both k-means and Expectation-Maximization algorithm to fit GMM, otherwise only
             use k-means to do it.
         :param ys: a list of mfcc templates. It cannot be a numpy array since variable length rows in a matrix are
@@ -124,7 +125,12 @@ class HMM:
         :return: the trained HMM model.
         """
         self.use_em = use_em
-        self.fit_GMM(ys, n_gaussians)
+        self.use_gmm = use_gmm
+        if use_gmm:
+            self.fit_GMM(ys, n_gaussians)
+        else:
+            self.mu, self.sigma, self.transitions, self.segments = skmeans(ys, self.n_segments,
+                                                                           return_segmented_data=True)
         return self
 
     def _init_gmm(self, n_gaussians):
@@ -186,5 +192,8 @@ class HMM:
         :param x: input data.
         :return: cost/score/probability.
         """
-        costs, _ = dtw1(x, self.gmm_states, self.transitions)
+        if self.use_gmm:
+            costs, _ = dtw1(x, self.gmm_states, self.transitions)
+        else:
+            costs, _ = dtw(x, self.mu, dist, self.transitions, self.sigma)
         return costs[-1, -1]
