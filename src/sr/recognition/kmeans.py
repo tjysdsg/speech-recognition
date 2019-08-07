@@ -102,7 +102,7 @@ def get_segments_from_path(path, n_segments):
     return seg_starts
 
 
-def skmeans(templates, n_segments=3, dist_fun=lambda *args: np.linalg.norm(args[0] - args[1]),
+def skmeans(templates, n_segments, dist_fun=lambda *args: np.linalg.norm(args[0] - args[1]),
             return_segmented_data=False, max_iteration=1000):
     """
     :param templates: templates as a list
