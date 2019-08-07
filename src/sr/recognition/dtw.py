@@ -154,16 +154,16 @@ def sentence_viterbi(x, model_graph):
     n_cols = len(x)
     n_rows = len(nodes)
     costs = np.full((n_rows, n_cols), np.inf)
-    costs[0, :] = 0
+    costs[0, 0] = 0
 
-    path_matrix = np.zeros((n_rows, n_cols, 2), dtype=np.int)
+    path_matrix = np.full((n_rows, n_cols, 2), np.inf, dtype=np.int)
 
     # the end of a sentence
-    end_nodes = model_graph.curr_layer
+    end_nodes = model_graph.get_ends()
 
     # fill cost matrix
     for c in range(n_cols):
-        for r in range(1, n_rows):
+        for r in range(0, n_rows):
             if r == 0 and c == 0:
                 continue
             subcosts = []
@@ -178,13 +178,17 @@ def sentence_viterbi(x, model_graph):
             origins, transition_cost = model_graph.get_origins(model_graph[r])
 
             for o in origins:
+                origin_idx = model_graph.nodes.index(o)
                 if model_graph[r].extra == 'NES':
-                    subcosts.append(costs[model_graph.nodes.index(o), c] + node_dist)
-                    from_points.append([model_graph.nodes.index(o), c])
+                    subcosts.append(costs[origin_idx, c] + node_dist)
+                    from_points.append([origin_idx, c])
                 else:
-                    subcosts.append(transition_cost + costs[model_graph.nodes.index(o), c - 1] + node_dist)
-                    from_points.append([model_graph.nodes.index(o), c - 1])
+                    subcosts.append(transition_cost + costs[origin_idx, c - 1] + node_dist)
+                    from_points.append([origin_idx, c - 1])
 
+            # if there is no node that can get to current position, simply skip it.
+            if len(subcosts) == 0:
+                continue
             # remember path and cost
             min_idx = np.argmin(subcosts)
             path_matrix[r, c] = from_points[min_idx]

@@ -107,6 +107,14 @@ class HMM:
         self.use_gmm = True
         self.use_em = True
 
+    def reset(self):
+        self.mu = None
+        self.sigma = None
+        self.transitions = None
+        self.segments = []
+        self.gmm_states = None
+        self.old_models = []
+
     def __getitem__(self, item):
         if type(item) is int or type(item) is slice:
             return self.gmm_states[item]
