@@ -107,6 +107,19 @@ class HMM:
         self.use_gmm = True
         self.use_em = True
 
+    def __eq__(self, other):
+        if self.use_gmm:
+            if not other.use_gmm:
+                return False
+            if self.n_segments != other.n_segments:
+                return False
+            for i in range(self.n_segments):
+                if self.gmm_states[i] != other.gmm_states[i]:
+                    return False
+            return True
+        else:
+            return np.allclose(self.mu, other.mu) and np.allclose(self.sigma, other.sigma)
+
     def reset(self):
         self.mu = None
         self.sigma = None
