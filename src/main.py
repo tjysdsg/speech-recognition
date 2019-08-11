@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-from sr.audio_capture import *
 from sr.feature import *
 from sr.recognition import *
 from scipy.io import wavfile
 import numpy as np
 import pickle
-import re
 import os
 import python_speech_features as psf
 from config import *
@@ -96,12 +94,22 @@ def test(models, folder, file_patterns):
 
 
 if __name__ == "__main__":
+    use_cache = True
     if True:
         models = []
         for digit in digit_names:
             file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
             models.append(pickle.load(file))
             file.close()
+        '''
+        for m in models:
+            m.use_gmm = True
+
+        for i, digit in enumerate(digit_names):
+            file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'wb')
+            pickle.dump(models[i], file)
+            file.close()
+        '''
 
         # get filenames
         f = open('/home/tjy/repos/aurora_digits/TRAIN.filelist')
@@ -129,13 +137,17 @@ if __name__ == "__main__":
                               'zero': 10}
 
         print('loading data')
-        data = [load_wav_as_mfcc(os.path.join(data_path, 'train', f + '.wav')) for f in filenames]
-        print('loading transcripts')
+        if use_cache:
+            f = open('data.pkl', 'rb')
+            data = pickle.load(f)
+            f.close()
+        else:
+            data = [load_wav_as_mfcc(os.path.join(data_path, 'train', f + '.wav')) for f in filenames]
+            f = open('data.pkl', 'wb')
+            pickle.dump(data, f)
+            f.close()
 
+        print('loading transcripts')
         labels = [list(map(lambda x: digit_name_idx_map[x], t.split())) for t in transcripts]
-        print('-' * 25)
-        print('labels:')
-        print(labels)
-        print('=' * 25)
 
         continuous_train(data, models, labels)

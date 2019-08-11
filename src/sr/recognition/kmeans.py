@@ -131,8 +131,11 @@ def skmeans(templates, n_segments, dist_fun=lambda *args: np.linalg.norm(args[0]
         seg_starts = np.zeros((n_temps, n_segments), dtype=np.int)
         transition_costs = calc_transition_costs(templates, seg_lens)
         for r in range(n_temps):
-            t = templates[r]
-            _, path = dtw(t, res, dist_fun, transition_costs)
+            # if template contains too few mfcc vectors, we cannot find a path in dtw
+            if templates[r].shape[0] < 5:
+                raise NameError('template is too small, cannot do dtw on it')
+
+            _, path = dtw(templates[r], res, dist_fun, transition_costs)
             seg_starts[r, 1:] = get_segments_from_path(path, n_segments)
         new_res, vars = combine_templates(templates, n_temps, n_segments, seg_starts)
         if np.allclose(res, new_res):

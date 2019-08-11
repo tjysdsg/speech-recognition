@@ -18,6 +18,7 @@ def dtw(x, y, dist_fun, transitions, variance=None, beam=np.inf):
     # initialize cost matrix
     col_count = len(x)
     row_count = len(y)
+    assert col_count > 1 and row_count > 1
     costs = np.full((row_count, col_count), np.inf)
     path_matrix = np.full((row_count, col_count, 2), np.inf, dtype=np.int)
 
@@ -169,7 +170,7 @@ def sentence_viterbi(x, model_graph):
             subcosts = []
             from_points = []
 
-            if model_graph[r].extra == 'NES':
+            if model_graph[r].model_index == 'NES':
                 # the cost of non-emitting state is 0
                 node_dist = 0
             else:
@@ -178,8 +179,8 @@ def sentence_viterbi(x, model_graph):
             origins, transition_cost = model_graph.get_origins(model_graph[r])
 
             for o in origins:
-                origin_idx = model_graph.nodes.index(o)
-                if model_graph[r].extra == 'NES':
+                origin_idx = o.node_index
+                if model_graph[r].model_index == 'NES':
                     subcosts.append(costs[origin_idx, c] + node_dist)
                     from_points.append([origin_idx, c])
                 else:
@@ -195,20 +196,20 @@ def sentence_viterbi(x, model_graph):
             costs[r, c] = subcosts[min_idx]
 
     # find the sentence which has the min cost
-    end_node_costs = [costs[nodes.index(n), -1] for n in end_nodes]
+    end_node_costs = [costs[n.node_index, -1] for n in end_nodes]
     min_idx = np.argmin(end_node_costs)
-    best_end_idx = nodes.index(end_nodes[min_idx])
+    best_end_idx = end_nodes[min_idx].node_index
     best_cost = costs[best_end_idx, -1]
 
     # find the matched string
     c = n_cols - 1
     r = best_end_idx
-    matched_sentence = [nodes[r].extra]  # extra is the model index of a gmm state
+    matched_sentence = [nodes[r].model_index]
     while 1:
         if c < 1:
             break
         r, c = path_matrix[r, c]
         if r != 0:
-            matched_sentence.append(nodes[r].extra)  # extra is the model index of a gmm state
+            matched_sentence.append(nodes[r].model_index)
 
     return best_cost, matched_sentence[::-1]
