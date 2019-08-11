@@ -18,4 +18,5 @@ and file saving
 - Better logging.
 - Use other file format, or a custom one, to save the models, instead of Pickle.
 - Add tests for each functionality.
-- Add CLI.
+- Add CLI for continuous speech training.
+- Better logging when using multiprocessing

@@ -5,9 +5,12 @@ from .hmm import *
 from itertools import chain
 import os
 import pickle
+import gc
+import multiprocessing
 
 
-def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, use_em=False, max_iteration=1):
+def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1):
+    use_cache = True
     # remember old models
     old_models = models
     for iter in range(max_iteration):
@@ -28,22 +31,48 @@ def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, us
         print('rearranging data for continuous training...')
         segments = {w: [] for w in chain.from_iterable(word_indices)}
         data_len = len(data)
-        for i in range(data_len):
-            m = model_graphs[i]
-            x = data[i]
-            # w = word_indices[i]
-            _, path = sentence_viterbi(x, m)
-            # find segments for every digit, a segment is ended and started by 'NES'
-            # each segment is a sequence of mfcc features, thus it's a 2d array-like
-            i_nes = [i for i, x in enumerate(path) if x == "NES"]
-            i_nes_len = len(i_nes)
-            for i in range(i_nes_len - 1):
-                start_i = i_nes[i] + 1
-                segments[path[start_i]].append(np.array(x[start_i:i_nes[i + 1]]))
+        # data_len = 10
+
+        if use_cache:
+            cache_file = open('cache.pkl', 'rb')
+            segments = pickle.load(cache_file)
+            cache_file.close()
+        else:
+            for i in range(data_len):
+                m = model_graphs[i]
+                x = data[i]
+
+                _, path = sentence_viterbi(x, m)
+                print('progress:', i / data_len)
+
+                # find segments for every digit, a segment is ended and started by 'NES'
+                # each segment is a sequence of mfcc features, thus it's a 2d array-like
+                i_nes = [i for i, x in enumerate(path) if x == "NES"]
+                i_nes_len = len(i_nes)
+                for index in range(i_nes_len - 1):
+                    start_i = i_nes[index] + 1
+                    segments[path[start_i]].append(x[start_i:i_nes[index + 1]])
+
+            # remove templates that are too small to do dtw on
+            for w in segments.keys():
+                seg = segments[w]
+                seg_len = len(seg)
+                del_i = []
+                for si in range(seg_len):
+                    if seg[si].shape[0] < 5:
+                        del_i.append(si)
+
+                del_i.sort(reverse=True)
+                for si in del_i:
+                    del seg[si]
+
+            cache_file = open('cache.pkl', 'wb')
+            pickle.dump(segments, cache_file)
+            cache_file.close()
 
         # continuous training
         print('doing hmm training...')
-        for w in segments.keys():
+        for w in [7, 9, 10]:  # segments.keys():
             # train a new HMM model using the segments
             m = HMM(5)
             m.fit(segments[w], n_gaussians, use_gmm, use_em)

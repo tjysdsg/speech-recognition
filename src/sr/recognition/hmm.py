@@ -4,7 +4,45 @@ import copy
 import scipy
 from .dtw import *
 from .kmeans import *
-from scipy.stats import multivariate_normal
+
+
+class MultivariateNormal:
+    def __init__(self, mean, cov):
+        self.mean = mean
+        self._cov = cov
+        if len(self.cov.shape) == 1:
+            cov = np.diag(self.cov)
+        else:
+            cov = self.cov
+        self.inv_cov = np.linalg.inv(cov)
+
+    @property
+    def cov(self):
+        return self._cov
+
+    @cov.setter
+    def cov(self, val):
+        self._cov = val
+        if len(self.cov.shape) == 1:
+            cov = np.diag(self.cov)
+        else:
+            cov = self.cov
+        self.inv_cov = np.linalg.inv(cov)
+
+    @cov.deleter
+    def cov(self):
+        del self.cov
+
+    def pdf(self, x):
+        size = x.shape[0]
+        if size == self.mean.shape[0]:
+            det = np.prod(self.cov)
+            norm_const = 1.0 / (np.power((2 * np.pi), float(size) / 2) * np.sqrt(det))
+            x_mu = x - self.mean
+            result = np.exp(-0.5 * (x_mu.dot(self.inv_cov).dot(x_mu.T)))
+            return norm_const * result
+        else:
+            raise NameError("The dimensions of the input don't match")
 
 
 def dist(v1, v2, variance):
@@ -17,7 +55,7 @@ class GMM:
     def __init__(self, mu, sigma, n_gaussians):
         self.n_gaussians = n_gaussians
         self.w = np.full(n_gaussians, 1 / n_gaussians)
-        self.dists = [multivariate_normal(mean=mu, cov=np.diag(sigma)) for _ in range(n_gaussians)]
+        self.dists = [MultivariateNormal(mean=mu, cov=sigma) for _ in range(n_gaussians)]
         self.mu_old = np.tile(mu, (n_gaussians, 1))
         self.sigma_old = np.tile(sigma, (n_gaussians, 1))
         self.w_old = np.full(n_gaussians, 1 / n_gaussians)
@@ -30,7 +68,7 @@ class GMM:
         else:
             return res
 
-    def em(self, data, n_gaussians, max_iteration=1000):
+    def em(self, data, n_gaussians, max_iteration=10000):
         for iter in range(max_iteration):
             p = np.zeros((data.shape[0], n_gaussians))
             mu = np.zeros((data.shape[1], n_gaussians))
@@ -73,7 +111,7 @@ class GMM:
         self.w[:mus.shape[0]] = weights
         for m in range(mus.shape[0]):
             self.dists[m].mean = mus[m, :]
-            self.dists[m].cov = np.diag(sigmas[m, :])
+            self.dists[m].cov = sigmas[m, :]
 
     def __eq__(self, other):
         res = True
@@ -157,10 +195,11 @@ class HMM:
     def _init_gmm(self, n_gaussians):
         self.gmm_states = [GMM(self.mu[i, :], self.sigma[i, :], n_gaussians) for i in range(self.n_segments)]
 
-    def fit_GMM(self, ys, n_gaussians, max_iteration=1000):
+    def fit_GMM(self, ys, n_gaussians, max_iteration=1):
         """fit all GMM states in the HMM.
         :param n_gaussians: the number of gaussians.
         """
+        print('doing segmental k-means')
         self.mu, self.sigma, self.transitions, self.segments = skmeans(ys, self.n_segments,
                                                                        return_segmented_data=True)
         self._init_gmm(n_gaussians)
