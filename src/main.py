@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sr.audio_capture import *
 from sr.feature import *
 from sr.recognition import *
 from scipy.io import wavfile
@@ -93,61 +94,131 @@ def test(models, folder, file_patterns):
     return n_passed / n_tests
 
 
+def aurora_continuous_train():
+    models = []
+    for digit in digit_names:
+        file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
+        models.append(pickle.load(file))
+        file.close()
+    '''
+    for m in models:
+        m.use_gmm = True
+
+    for i, digit in enumerate(digit_names):
+        file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'wb')
+        pickle.dump(models[i], file)
+        file.close()
+    '''
+
+    # get filenames
+    f = open('/home/tjy/repos/aurora_digits/TRAIN.filelist')
+    filenames = [line.rstrip('\n\r ') for line in f]
+    f.close()
+    # get transcripts
+    import re
+
+    ex = re.compile(r'^[A-Za-z\s]+')
+    f = open('/home/tjy/repos/aurora_digits/TRAIN.transcripts')
+    transcripts = [ex.match(line)[0].rstrip('\n\r ') for line in f]
+    transcripts = [t.replace('sil', '') for t in transcripts]
+    f.close()
+
+    digit_name_idx_map = {'one': 0,
+                          'two': 1,
+                          'three': 2,
+                          'four': 3,
+                          'five': 4,
+                          'six': 5,
+                          'seven': 6,
+                          'eight': 7,
+                          'nine': 8,
+                          'oh': 9,
+                          'zero': 10}
+
+    print('loading data')
+    if use_cache:
+        f = open('data.pkl', 'rb')
+        data = pickle.load(f)
+        f.close()
+    else:
+        data = [load_wav_as_mfcc(os.path.join(data_path, 'train', f + '.wav')) for f in filenames]
+        f = open('data.pkl', 'wb')
+        pickle.dump(data, f)
+        f.close()
+
+    print('loading transcripts')
+    labels = [list(map(lambda x: digit_name_idx_map[x], t.split())) for t in transcripts]
+
+    continuous_train(data, models, labels)
+
+
 if __name__ == "__main__":
     use_cache = True
-    if True:
-        models = []
-        for digit in digit_names:
-            file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
-            models.append(pickle.load(file))
-            file.close()
-        '''
-        for m in models:
-            m.use_gmm = True
+    if False:
+        aurora_continuous_train()
 
-        for i, digit in enumerate(digit_names):
-            file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'wb')
-            pickle.dump(models[i], file)
-            file.close()
-        '''
+    models = []
+    for digit in range(11):
+        file = open('models-continuous-4gaussians-em-norealign/' + str(digit) + '.pkl', 'rb')
+        models.append(pickle.load(file))
+        file.close()
 
-        # get filenames
-        f = open('/home/tjy/repos/aurora_digits/TRAIN.filelist')
-        filenames = [line.rstrip('\n\r ') for line in f]
-        f.close()
-        # get transcripts
-        import re
+    print('building model graph(s)...')
+    model_graph = LayeredHMMGraph([])
+    nes0 = model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models[1:9])
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    nes1 = model_graph.add_non_emitting_state()
 
-        ex = re.compile(r'^[A-Za-z\s]+')
-        f = open('/home/tjy/repos/aurora_digits/TRAIN.transcripts')
-        transcripts = [ex.match(line)[0].rstrip('\n\r ') for line in f]
-        transcripts = [t.replace('sil', '') for t in transcripts]
-        f.close()
+    model_graph.add_edge(nes0, nes1)
 
-        digit_name_idx_map = {'one': 0,
-                              'two': 1,
-                              'three': 2,
-                              'four': 3,
-                              'five': 4,
-                              'six': 5,
-                              'seven': 6,
-                              'eight': 7,
-                              'nine': 8,
-                              'oh': 9,
-                              'zero': 10}
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state(end=True)
 
-        print('loading data')
-        if use_cache:
-            f = open('data.pkl', 'rb')
-            data = pickle.load(f)
-            f.close()
-        else:
-            data = [load_wav_as_mfcc(os.path.join(data_path, 'train', f + '.wav')) for f in filenames]
-            f = open('data.pkl', 'wb')
-            pickle.dump(data, f)
-            f.close()
+    digit_idx_name_map = {0: 'one',
+                          1: 'two',
+                          2: 'three',
+                          3: 'four',
+                          4: 'five',
+                          5: 'six',
+                          6: 'seven',
+                          7: 'eight',
+                          8: 'nine',
+                          9: 'oh',
+                          10: 'zero'}
+    # record('test.wav')
+    # get all test files using regular expressions
+    print('loading data...')
+    f = 'test.wav'  # correct answer 3082
+    x = load_wav_as_mfcc(f)
+    print('recognizing...')
+    _, matched = sentence_viterbi(x, model_graph)
+    print('preparing results...')
 
-        print('loading transcripts')
-        labels = [list(map(lambda x: digit_name_idx_map[x], t.split())) for t in transcripts]
 
-        continuous_train(data, models, labels)
+    def split_result(seq, val):
+        ret = None
+        found = False
+        for e in seq:
+            if e != val:
+                if not found:
+                    ret = e
+                    found = True
+            elif ret:
+                yield ret
+                ret = None
+                found = False
+
+
+    matched = list(split_result(matched, 'NES'))
+    matched = list(map(lambda x: digit_idx_name_map[x], matched))
+    print(matched)
