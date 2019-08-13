@@ -14,6 +14,8 @@ class GraphNode:
         return self.id == other.id
 
 
+# TODO: make apis of LayeredHMMGraph ContinuousGraph the same
+
 class Graph:
     def __init__(self, nodes):
         self.nodes = nodes
@@ -47,47 +49,59 @@ class Graph:
         return self.nodes[item]
 
 
-# class LayeredHMMGraph(Graph):
-#     def __init__(self, nodes):
-#         super().__init__(nodes)
-#         self.curr_layer = []
-#
-#     def add_non_emitting_state(self):
-#         nes = GraphNode(None, 'NES')
-#         self.nodes.append(nes)  # NES stands for non-emitting state
-#         if len(self.curr_layer) > 0:
-#             for m in self.curr_layer:
-#                 self.add_edge(m, nes)
-#         self.curr_layer = [nes]
-#         return nes
-#
-#     def add_layer_from_models(self, models):
-#         # assert that the previous layer is a non-emitting state
-#         assert len(self.curr_layer) == 1 and self.curr_layer[0].model_index == 'NES'
-#         new_layer = []
-#         for i in range(len(models)):
-#             m = models[i]
-#             # get gmm states of all models
-#             gmm_nodes = [GraphNode(gs, model_index=i) for gs in m.gmm_states]
-#             n_segments = len(gmm_nodes)
-#             # connect previous layer to the current one
-#             self.add_edge(self.curr_layer[0], gmm_nodes[0], 0)
-#
-#             # build graph for all gmm states in each hmm model
-#             for j in range(0, n_segments):
-#                 # self loop
-#                 self.add_edge(gmm_nodes[j], gmm_nodes[j], val=m.transitions[j, j])
-#                 if j < n_segments - 1:
-#                     # connect to the next
-#                     self.add_edge(gmm_nodes[j], gmm_nodes[j + 1], val=m.transitions[j + 1, j])
-#                 else:
-#                     new_layer.append(gmm_nodes[j])
-#         # update self.curr_layer to the last gmm_states in models
-#         self.curr_layer = new_layer
-#         return new_layer
-#
-#     def get_ends(self):
-#         return self.curr_layer
+class LayeredHMMGraph(Graph):
+    def __init__(self, nodes):
+        super().__init__(nodes)
+        self.curr_layer = []
+        self.ends = []
+
+    def add_non_emitting_state(self, end=False):
+        nes = GraphNode(None, model_index='NES', node_index=len(self.nodes))
+        self.nodes.append(nes)  # NES stands for non-emitting state
+        if len(self.curr_layer) > 0:
+            for m in self.curr_layer:
+                self.add_edge(m, nes)
+        self.curr_layer = [nes]
+        if end:
+            self.ends.append(nes)
+        return nes
+
+    def add_layer_from_models(self, models):
+        # assert that the previous layer is a non-emitting state
+        assert len(self.curr_layer) == 1 and self.curr_layer[0].model_index == 'NES'
+        new_layer = []
+        for i in range(len(models)):
+            m = models[i]
+            # get gmm states of all models
+            gmm_nodes = [GraphNode(gs, model_index=i) for gs in m.gmm_states]
+            n_gaussians = len(gmm_nodes)
+            # connect previous layer to the current one
+            self.add_edge(self.curr_layer[0], gmm_nodes[0], 0)
+
+            # build graph for all gmm states in each hmm model
+            for j in range(0, n_gaussians):
+                # self loop
+                self.add_edge(gmm_nodes[j], gmm_nodes[j], val=m.transitions[j, j])
+                if j < n_gaussians - 1:
+                    # connect to the next
+                    self.add_edge(gmm_nodes[j], gmm_nodes[j + 1], val=m.transitions[j + 1, j])
+                else:
+                    new_layer.append(gmm_nodes[j])
+        # update self.curr_layer to the last gmm_states in models
+        self.curr_layer = new_layer
+        self.update_node_indices()
+        return new_layer
+
+    # TODO: don't update all nodes when unnecessary
+    def update_node_indices(self):
+        n_nodes = len(self.nodes)
+        for i in range(n_nodes):
+            if self.nodes[i].node_index is not None:
+                assert self.nodes[i].node_index == i
+            self.nodes[i].node_index = i
+
+    def get_ends(self):
+        return self.ends
 
 
 class ContinuousGraph(Graph):

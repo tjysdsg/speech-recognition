@@ -237,6 +237,7 @@ class AudioRecorder:
         stream.close()
 
         if visualize:
+            import matplotlib.pyplot as plt
             fig, ax = plt.subplots(4)
             ax[0].plot(self.samples)
             ax[0].set_title('samples')
