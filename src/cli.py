@@ -6,8 +6,9 @@ def cli():
     # parse arguments
     import argparse
     parser = argparse.ArgumentParser(description='CLI for speech recognition functionality.')
-    parser.add_argument('action', metavar='ACTION', type=str, nargs=1, choices=['train', 'test', 'record'],
-                        help='Action to perform. Can be one of the following:\n train \n test \n record')
+    parser.add_argument('action', metavar='ACTION', type=str, nargs=1,
+                        choices=['train', 'test', 'record', 'continuous'],
+                        help='Action to perform.')
     parser.add_argument("-d", "--model-directory", default='models-4gaussians-em-realign',
                         help="Directory which the trained models are stored, or test models are used.")
     parser.add_argument("-g", "--gmm", help="Use GMM-HMM as the model.", default=False, action='store_true')
@@ -74,6 +75,9 @@ def cli():
                 c = cost
                 best_model = i
         print(best_model)
+
+    if args.action[0] == 'continuous':
+        aurora_continuous_train()
 
 
 if __name__ == "__main__":

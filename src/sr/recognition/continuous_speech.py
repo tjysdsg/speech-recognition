@@ -9,8 +9,8 @@ import gc
 import multiprocessing
 
 
-def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1):
-    use_cache = True
+def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1,
+                     use_cache=False):
     # remember old models
     old_models = models
     for iter in range(max_iteration):
@@ -19,22 +19,21 @@ def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, us
         print('continuous training iteration:', iter)
         print('building model graphs')
         # make model_graphs
-        model_graphs = [ContinuousGraph([]) for _ in word_indices]
-        n_labels = len(word_indices)
+        model_graphs = [ContinuousGraph([]) for _ in lables]
+        n_labels = len(lables)
         for i in range(n_labels):
-            lb = word_indices[i]
+            lb = lables[i]
             model_graphs[i].add_non_emitting_state()
             for digit in lb:
                 model_graphs[i].add_model(models[digit], digit)
                 model_graphs[i].add_non_emitting_state()
 
         print('rearranging data for continuous training...')
-        segments = {w: [] for w in chain.from_iterable(word_indices)}
+        segments = {w: [] for w in chain.from_iterable(lables)}
         data_len = len(data)
-        # data_len = 10
 
         if use_cache:
-            cache_file = open('cache.pkl', 'rb')
+            cache_file = open('cache/segments.pkl', 'rb')
             segments = pickle.load(cache_file)
             cache_file.close()
         else:
@@ -66,13 +65,13 @@ def continuous_train(data, models, word_indices, use_gmm=True, n_gaussians=4, us
                 for si in del_i:
                     del seg[si]
 
-            cache_file = open('cache.pkl', 'wb')
+            cache_file = open('cache/segments.pkl', 'wb')
             pickle.dump(segments, cache_file)
             cache_file.close()
 
         # continuous training
         print('doing hmm training...')
-        for w in [7, 9, 10]:  # segments.keys():
+        for w in segments.keys():
             # train a new HMM model using the segments
             m = HMM(5)
             m.fit(segments[w], n_gaussians, use_gmm, use_em)

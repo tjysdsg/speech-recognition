@@ -151,3 +151,6 @@ tags
 .idea/
 .vs/
 *build*/
+src/cache/*
+src/train/*
+src/test/*
