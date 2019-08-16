@@ -183,7 +183,7 @@ def sentence_viterbi(x, model_graph):
                 if model_graph[r].model_index == 'NES':
                     subcosts.append(costs[origin_idx, c] + node_dist)
                     from_points.append([origin_idx, c])
-                else:
+                elif c > 0:
                     subcosts.append(transition_cost + costs[origin_idx, c - 1] + node_dist)
                     from_points.append([origin_idx, c - 1])
 

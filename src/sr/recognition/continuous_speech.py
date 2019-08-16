@@ -33,6 +33,7 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
         data_len = len(data)
 
         if use_cache:
+            print('using cache/segments.pkl')
             cache_file = open('cache/segments.pkl', 'rb')
             segments = pickle.load(cache_file)
             cache_file.close()

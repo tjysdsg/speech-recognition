@@ -8,6 +8,7 @@ import os
 import python_speech_features as psf
 from config import *
 import re
+import hashlib
 
 
 def delta_feature(feat):
@@ -113,20 +114,20 @@ def aurora_continuous_train():
     if not os.path.isdir('cache'):
         os.mkdir('cache')
 
+    import inspect
+    data_hash = hashlib.md5("".join(filenames).encode()).hexdigest()
+    code_hash = hashlib.md5("".join(inspect.getsource(sentence_viterbi).split()).encode()).hexdigest()
     if os.path.isfile('cache/cache.meta'):
         # compare hash value of labels to the value in cache.meta
-        hash_value = hash("".join(filenames))
-        # load meta data
         meta_file = open('cache/cache.meta', 'rb')
         meta_data = pickle.load(meta_file)
         meta_file.close()
         # the cache is clean only if data_hash didn't change, otherwise cache is dirty
-        if hash_value == meta_data['data_hash']:
+        if data_hash == meta_data['data_hash'] and code_hash == meta_data['code_hash']:
             use_cache = True
     else:
-        meta_data = {'data_hash': hash("".join(filenames))}
+        meta_data = {'data_hash': data_hash, 'code_hash': code_hash}
 
-    use_cache = True
     if use_cache:
         print('using cache/data.pkl')
         f = open('cache/data.pkl', 'rb')
