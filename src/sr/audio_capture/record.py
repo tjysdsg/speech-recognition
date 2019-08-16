@@ -235,20 +235,6 @@ class AudioRecorder:
 
         stream.stop_stream()
         stream.close()
-
-        if visualize:
-            import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(4)
-            ax[0].plot(self.samples)
-            ax[0].set_title('samples')
-            ax[1].plot(self.levels)
-            ax[1].set_title('sample levels')
-            ax[2].plot(self.backgrounds)
-            ax[2].set_title('backgrounds')
-            ax[3].plot(self.final_levels)
-            ax[3].set_title('final levels')
-            plt.show()
-
         self.audio_driver.terminate()
 
     def get_samples(self, dtype=np.int16):

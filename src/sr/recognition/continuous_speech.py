@@ -5,13 +5,11 @@ from .hmm import *
 from itertools import chain
 import os
 import pickle
-import gc
-import multiprocessing
 import warnings
 import copy
 
 
-def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1):
+def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1000):
     # remember old models
     old_models = copy.deepcopy(models)
 
@@ -19,7 +17,7 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
         converged = True
         print('=' * 25)
         print('Continuous training iteration:', iter)
-        print('rearranging data for hmm training...')
+        print('Rearranging data for hmm training...')
         segments = {w: [] for w in chain.from_iterable(lables)}
         data_len = len(data)
 
@@ -39,7 +37,7 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
             x = data[i]
 
             _, path = sentence_viterbi(x, m)
-            print('Progress:', str(100 * i / data_len) + "%", end='\r')
+            print('Progress:', str(int(100 * i / data_len)) + "%", end='\r')
 
             # find segments for every digit, a segment is ended and started by 'NES'
             # each segment is a sequence of mfcc features, thus it's a 2d array-like
@@ -74,6 +72,7 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
             m.fit(segments[w], n_gaussians, use_gmm, use_em)
             converged = converged and m == old_models[w]
             old_models[w] = m
+            # TODO: use command line argument for output model path
             file = open(os.path.join('models-continuous-4gaussians-em-realign', str(w) + '.pkl'), 'wb')
             pickle.dump(m, file)
             file.close()

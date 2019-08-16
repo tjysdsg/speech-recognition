@@ -23,16 +23,16 @@ def delta_feature(feat):
     return delta
 
 
+# def load_wav_as_mfcc(path):
+#     fb, mfcc = mfcc_features(path)
+#     df = delta_feature(mfcc)
+#     ddf = delta_feature(df)
+#     features = np.concatenate([mfcc, df, ddf], axis=1)
+#     features = standardize(features)
+#     return features
+
+
 def load_wav_as_mfcc(path):
-    fb, mfcc = mfcc_features(path)
-    df = delta_feature(mfcc)
-    ddf = delta_feature(df)
-    features = np.concatenate([mfcc, df, ddf], axis=1)
-    features = standardize(features)
-    return features
-
-
-def load_wav_as_mfcc1(path):
     """
     Another version of load_wav_as_mfcc using library python_speech_feature to calculate
     mfcc, to check if this implementation is correct.
@@ -48,7 +48,7 @@ def load_wav_as_mfcc1(path):
 
 def make_HMM(filenames, n_segs, use_gmm, use_em):
     print('Loading wav files to mfcc features')
-    ys = [load_wav_as_mfcc1(filename) for filename in filenames]
+    ys = [load_wav_as_mfcc(filename) for filename in filenames]
     m = HMM(n_segs)
     print('Fitting HMMs')
     model = m.fit(ys, n_gaussians=4, use_gmm=use_gmm, use_em=use_em)
@@ -76,7 +76,7 @@ def test(models, folder, file_patterns):
         # do evaluation on all models, find the best one
         # NOTE: the evaluation is based on costs
         for f in filenames:
-            input = load_wav_as_mfcc1(f)
+            input = load_wav_as_mfcc(f)
             best_model = 0
             c = np.inf
             # find the best model
@@ -98,7 +98,8 @@ def test(models, folder, file_patterns):
 def aurora_continuous_train():
     models = []
     for digit in digit_names:
-        file = open('models-4gaussians-em-realign/' + digit + '.pkl', 'rb')
+        # TODO: use command line argument for input model path
+        file = open('models-4gaussians-em/' + digit + '.pkl', 'rb')
         models.append(pickle.load(file))
         file.close()
 
@@ -128,7 +129,6 @@ def aurora_continuous_train():
     else:
         meta_data = {'data_hash': data_hash}
 
-    use_cache = True  # TODO: remove this line
     if use_cache:
         print('using cache/data.pkl')
         f = open('cache/data.pkl', 'rb')
@@ -136,7 +136,7 @@ def aurora_continuous_train():
         f.close()
     else:
         print('loading data')
-        data = [load_wav_as_mfcc1(os.path.join('train', f)) for f in filenames]
+        data = [load_wav_as_mfcc(os.path.join('train', f)) for f in filenames]
         f = open('cache/data.pkl', 'wb')
         pickle.dump(data, f)
         f.close()

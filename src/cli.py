@@ -1,5 +1,4 @@
 from main import *
-from multiprocessing import Process
 
 
 def cli():
@@ -9,35 +8,21 @@ def cli():
     parser.add_argument('action', metavar='ACTION', type=str, nargs=1,
                         choices=['train', 'test', 'record', 'continuous'],
                         help='Action to perform.')
-    parser.add_argument("-d", "--model-directory", default='models-4gaussians-em-realign',
+    parser.add_argument("-d", "--model-directory", default='models-4gaussians-em',
                         help="Directory which the trained models are stored, or test models are used.")
     parser.add_argument("-g", "--gmm", help="Use GMM-HMM as the model.", default=False, action='store_true')
     parser.add_argument("-e", "--em", help="Use EM algorithm to train models.", default=False, action='store_true')
-    parser.add_argument("-p", "--thread", help="Use multi-threading/multi-processing.", default=False,
-                        action='store_true')
     args = parser.parse_args()
 
     if args.action[0] == 'train':
         print('training...')
         # data folder location
         folder = os.path.join(data_path, 'train')
-        processes = []
         for digit in digit_names:
             filenames = [os.path.join(folder, f) for f in os.listdir(folder) if
                          re.match('[A-Z]+_' + digit + '[AB].wav', f)]
 
-            if args.thread:
-                # create a new process for every digit
-                p = Process(target=train, args=(filenames, args.model_directory, digit, 5, args.gmm, args.em))
-                p.start()
-                processes.append(p)
-            else:
-                train(filenames, args.model_directory, digit, n_segs=5, use_gmm=args.gmm, use_em=args.em)
-        # wait for all processes to end (if use multiple processes)
-        if args.thread:
-            # wait until all processes finished their jobs
-            for p in processes:
-                p.join()
+            train(filenames, args.model_directory, digit, n_segs=5, use_gmm=args.gmm, use_em=args.em)
 
     if args.action[0] == 'test':
         print('testing...')

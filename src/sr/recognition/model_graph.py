@@ -15,7 +15,6 @@ class GraphNode:
 
 
 # TODO: make apis of LayeredHMMGraph ContinuousGraph the same
-
 class Graph:
     def __init__(self, nodes):
         self.nodes = nodes
@@ -30,17 +29,21 @@ class Graph:
 
     def get_dests(self, origin):
         res = []
+        values = []
         for o, d, val in self.edges:
             if o.id == origin.id:
                 res.append(d)
-        return res, val
+                values.append(val)
+        return res, values
 
     def get_origins(self, dest):
         res = []
+        values = []
         for o, d, val in self.edges:
             if d.id == dest.id:
                 res.append(o)
-        return res, val
+                values.append(val)
+        return res, values
 
     def get_ends(self):
         raise NotImplemented()
