@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from .dtw import *
+from .kmeans import *
 import numpy as np
 import copy
 import scipy
-from .dtw import *
-from .kmeans import *
 
 
 class MultivariateNormal:
@@ -102,7 +102,7 @@ class GMM:
                 print("EM converged at iteration:", iter)
                 break
             else:
-                print("EM iteration:", iter, end="\r")
+                print("EM iteration:", str(iter), end="\r")
                 self.mu_old[:n_gaussians, :] = mu
                 self.sigma_old[:n_gaussians, :] = sigma
                 self.w_old[:n_gaussians] = w

@@ -176,15 +176,15 @@ def sentence_viterbi(x, model_graph):
             else:
                 node_dist = model_graph[r].val.evaluate(x[c])
 
-            origins, transition_cost = model_graph.get_origins(model_graph[r])
+            origins, transition_costs = model_graph.get_origins(model_graph[r])
 
-            for o in origins:
+            for o, tc in zip(origins, transition_costs):
                 origin_idx = o.node_index
                 if model_graph[r].model_index == 'NES':
                     subcosts.append(costs[origin_idx, c] + node_dist)
                     from_points.append([origin_idx, c])
                 elif c > 0:
-                    subcosts.append(transition_cost + costs[origin_idx, c - 1] + node_dist)
+                    subcosts.append(tc + costs[origin_idx, c - 1] + node_dist)
                     from_points.append([origin_idx, c - 1])
 
             # if there is no node that can get to current position, simply skip it.
