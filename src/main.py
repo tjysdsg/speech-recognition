@@ -4,7 +4,7 @@ from sr import *
 if __name__ == "__main__":
     models = []
     for digit in range(11):
-        file = open('models-continuous-4gaussians-em-norealign/' + str(digit) + '.pkl', 'rb')
+        file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
         models.append(pickle.load(file))
         file.close()
 

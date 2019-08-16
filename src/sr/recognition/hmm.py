@@ -141,7 +141,6 @@ class HMM:
         self.transitions = None
         self.segments = []
         self.gmm_states = None
-        self.old_models = []
         self.use_gmm = True
         self.use_em = True
 
@@ -164,7 +163,6 @@ class HMM:
         self.transitions = None
         self.segments = []
         self.gmm_states = None
-        self.old_models = []
 
     def __getitem__(self, item):
         if type(item) is int or type(item) is slice:
@@ -195,28 +193,21 @@ class HMM:
     def _init_gmm(self, n_gaussians):
         self.gmm_states = [GMM(self.mu[i, :], self.sigma[i, :], n_gaussians) for i in range(self.n_segments)]
 
-    def fit_GMM(self, ys, n_gaussians, max_iteration=1):
+    def fit_GMM(self, ys, n_gaussians):
         """fit all GMM states in the HMM.
         :param n_gaussians: the number of gaussians.
         """
-        print('doing segmental k-means')
+        print('Doing segmental k-means')
         self.mu, self.sigma, self.transitions, self.segments = skmeans(ys, self.n_segments,
                                                                        return_segmented_data=True)
         self._init_gmm(n_gaussians)
-        for iteration in range(max_iteration):
-            print("GMM fit iteration:", iteration)
-            self.old_models = copy.deepcopy(self.gmm_states)
 
-            # the model is converged if all current models are the same as the
-            # ones from last iteration
-            converged = True
-            for i in range(len(self.segments)):
-                self._fit_GMM(self.segments[i], n_gaussians, i)
-                converged = converged and self.old_models[i] == self.gmm_states[i]  # == operator override
-            if converged:
-                print("GMM fit converges at iteration:", iteration)
-                break
-            self.segments = align_gmm_states(ys, self.gmm_states, self.transitions, self.n_segments)
+        # train each GMM
+        for i in range(len(self.segments)):
+            self._fit_GMM(self.segments[i], n_gaussians, i)
+
+        # update segments
+        self.segments = align_gmm_states(ys, self.gmm_states, self.transitions, self.n_segments)
 
     def _fit_GMM(self, data, n_gaussians, seg_i):
         """fit a single GMM state. Only for internal use.

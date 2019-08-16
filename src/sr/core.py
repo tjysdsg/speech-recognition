@@ -105,9 +105,10 @@ def aurora_continuous_train():
     # get filenames
     sequence_regex = re.compile('(?<=_)[OZ0-9]+(?=[AB])')
     filenames = [f for f in os.listdir('train') if os.path.isfile(os.path.join('train', f))]
+    filenames.sort()
 
     # get transcripts
-    sequences = [re.search(sequence_regex, test_filename).group(0) for test_filename in filenames]
+    sequences = [re.search(sequence_regex, f).group(0) for f in filenames]
     labels = [list(map(lambda x: filename_index_map[x], s)) for s in sequences]
 
     use_cache = False
@@ -116,18 +117,18 @@ def aurora_continuous_train():
 
     import inspect
     data_hash = hashlib.md5("".join(filenames).encode()).hexdigest()
-    code_hash = hashlib.md5("".join(inspect.getsource(sentence_viterbi).split()).encode()).hexdigest()
     if os.path.isfile('cache/cache.meta'):
         # compare hash value of labels to the value in cache.meta
         meta_file = open('cache/cache.meta', 'rb')
         meta_data = pickle.load(meta_file)
         meta_file.close()
         # the cache is clean only if data_hash didn't change, otherwise cache is dirty
-        if data_hash == meta_data['data_hash'] and code_hash == meta_data['code_hash']:
+        if data_hash == meta_data['data_hash']:
             use_cache = True
     else:
-        meta_data = {'data_hash': data_hash, 'code_hash': code_hash}
+        meta_data = {'data_hash': data_hash}
 
+    use_cache = True  # TODO: remove this line
     if use_cache:
         print('using cache/data.pkl')
         f = open('cache/data.pkl', 'rb')
@@ -144,4 +145,4 @@ def aurora_continuous_train():
         pickle.dump(meta_data, meta_file)
         meta_file.close()
 
-    continuous_train(data, models, labels, use_cache=use_cache)
+    continuous_train(data, models, labels)
