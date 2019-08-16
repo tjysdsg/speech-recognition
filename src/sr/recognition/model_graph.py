@@ -31,14 +31,14 @@ class Graph:
     def get_dests(self, origin):
         res = []
         for o, d, val in self.edges:
-            if o.id == origin.id:  # GraphNode.__eq__
+            if o.id == origin.id:
                 res.append(d)
         return res, val
 
     def get_origins(self, dest):
         res = []
         for o, d, val in self.edges:
-            if d.id == dest.id:  # GraphNode.__eq__
+            if d.id == dest.id:
                 res.append(o)
         return res, val
 

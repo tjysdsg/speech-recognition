@@ -10,16 +10,13 @@ if __name__ == "__main__":
 
     print('building model graph(s)...')
     model_graph = LayeredHMMGraph([])
-    nes0 = model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models[1:9])
     model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models)
     model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models)
-    nes1 = model_graph.add_non_emitting_state()
-
-    model_graph.add_edge(nes0, nes1)
-
+    model_graph.add_non_emitting_state()
+    model_graph.add_layer_from_models(models)
+    model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models)
     model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models)
@@ -28,7 +25,6 @@ if __name__ == "__main__":
     model_graph.add_non_emitting_state()
     model_graph.add_layer_from_models(models)
     model_graph.add_non_emitting_state(end=True)
-
 
     # get all test files using regular expressions
     print('loading data...')
@@ -42,6 +38,7 @@ if __name__ == "__main__":
 
     print('recognizing...')
 
+
     def split_result(seq, val):
         ret = None
         found = False
@@ -50,7 +47,7 @@ if __name__ == "__main__":
                 if not found:
                     ret = e
                     found = True
-            elif ret:
+            elif ret is not None:
                 yield ret
                 ret = None
                 found = False
@@ -58,10 +55,25 @@ if __name__ == "__main__":
 
     n = len(test_filenames)
     correct = 0
+    n_digits = 0
+    digit_ndiff = 0
     for x, l in zip(data, labels):
         _, matched = sentence_viterbi(x, model_graph)
         matched = list(split_result(matched, 'NES'))
+
+        n_digits += len(l)
         if matched == l:
             correct += 1
+            print('Correct:', matched)
+        else:
+            print('Incorrect:', matched, l)
+            # find how many digits are different
+            matched = np.asarray(matched)
+            l = np.asarray(l)
+            diff = matched - l
+            n_diff = np.count_nonzero(diff)
+            print('Diff:', n_diff)
+            digit_ndiff += n_diff
 
-    print(correct / n)
+    print('Sequence accuracy:', correct / n)
+    print('Digit accuracy:', (n_digits - digit_ndiff) / n_digits)
