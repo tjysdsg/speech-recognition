@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .decode import dtw, dtw1
+from .decode import dtw, decode_hmm_states
 import numpy as np
 
 
@@ -193,6 +193,6 @@ def align_gmm_states(templates, gmm_states, transition_costs, n_segments):
     seg_starts = np.zeros((n_temps, n_segments), dtype=np.int)
     for r in range(n_temps):
         t = templates[r]
-        _, path = dtw1(t, gmm_states, transition_costs)
+        _, path = decode_hmm_states(t, gmm_states, transition_costs)
         seg_starts[r, 1:] = get_segments_from_path(path, n_segments)
     return segment_data(templates, n_temps, n_segments, seg_starts)

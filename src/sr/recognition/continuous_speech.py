@@ -1,15 +1,44 @@
 # -*- coding: utf-8 -*-
-from .model_graph import *
-from .decode import sentence_viterbi
+from .decode import decode_hmm_states
 from .hmm import HMM
+from .hmm_state import NES
 from itertools import chain
 import os
 import pickle
 import warnings
 import copy
+import numpy as np
 
 
-def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1000):
+def build_state_sequences(hmms, label_matrix):
+    seq = []
+    # count number of hmms and then number of states
+    n_states = 1  # 1 non-emitting state at the very beginning
+    for labels in label_matrix:
+        for l in labels:
+            n_states += len(hmms[l].gmm_states)
+        n_states += 1  # 1 non-emitting state after each layer
+
+    trans = np.full((n_states, n_states), np.inf)
+    seq.append(NES())
+    prev_nes_idx = 0
+    trans_offset = 0
+    for labels in label_matrix:
+        seq.append(NES())  # NES after this layer, but added first for convenience
+        trans_offset = len(seq)
+        for l in labels:
+            hmm = hmms[l]
+            seq += hmm.gmm_states
+            n_states = len(hmm.gmm_states)
+            trans[trans_offset: trans_offset + n_states, trans_offset:trans_offset + n_states] = hmm.transitions
+            for i in range(n_states):
+                trans[trans_offset + i, prev_nes_idx] = 0  # transition from previous nes to a gmm state
+                trans[trans_offset - 1, trans_offset + i] = 0  # transition from a gmm state to an nes
+        prev_nes_idx = trans_offset - 1
+    return seq, trans, trans_offset - 1
+
+
+def continuous_train(data, models, label_seqs, use_gmm=True, n_gaussians=4, use_em=True, max_iteration=1000):
     # remember old models
     old_models = copy.deepcopy(models)
 
@@ -18,25 +47,23 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
         print('=' * 25)
         print('Continuous training iteration:', iter)
         print('Rearranging data for hmm training...')
-        segments = {w: [] for w in chain.from_iterable(lables)}
+        segments = {w: [] for w in chain.from_iterable(label_seqs)}
         data_len = len(data)
 
-        print('Building model graphs')
-        # make model_graphs for current models
-        model_graphs = [ContinuousGraph([]) for _ in lables]
-        n_labels = len(lables)
-        for i in range(n_labels):
-            lb = lables[i]
-            model_graphs[i].add_non_emitting_state()
-            for digit in lb:
-                model_graphs[i].add_model(old_models[digit], digit)
-                model_graphs[i].add_non_emitting_state()
+        print('Building state sequences')
+        sequences_and_transitions = [build_state_sequences(old_models, [[l] for l in labels]) for labels in label_seqs]
 
+        print('Rearranging data, this may take a while...')
         for i in range(data_len):
-            m = model_graphs[i]
+            seq = sequences_and_transitions[i][0]
+            trans = sequences_and_transitions[i][1]
+            end_idx = sequences_and_transitions[i][2]
             x = data[i]
 
-            _, path = sentence_viterbi(x, m)
+            _, path = decode_hmm_states(x, seq, trans, end_points=[[end_idx, -1]])
+            # FIXME
+            path = reversed(path[:, 0].tolist())
+
             print('Progress:', str(int(100 * i / data_len)) + "%", end='\r')
 
             # find segments for every digit, a segment is ended and started by 'NES'

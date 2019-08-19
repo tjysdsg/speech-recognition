@@ -8,24 +8,7 @@ if __name__ == "__main__":
         models.append(pickle.load(file))
         file.close()
 
-    print('building model graph(s)...')
-    model_graph = LayeredHMMGraph([])
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state()
-    model_graph.add_layer_from_models(models)
-    model_graph.add_non_emitting_state(end=True)
-
+    # TODO
     # get all test files using regular expressions
     print('loading data...')
     sequence_regex = re.compile('(?<=_)[OZ0-9]+(?=A)')

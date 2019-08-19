@@ -29,7 +29,7 @@ def cli():
         # get all the models from pickle files
         models = []
         for digit in digit_names:
-            file = open(args.model_directory + digit + '.pkl', 'rb')
+            file = open(os.path.join(args.model_directory, digit + '.pkl'), 'rb')
             models.append(pickle.load(file))
             file.close()
         # get file patterns for each digit

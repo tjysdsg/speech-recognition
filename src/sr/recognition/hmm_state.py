@@ -139,3 +139,6 @@ class GMM(HMMState):
             res = res and np.allclose(self.dists[i].mean, other.dists[i].mean) and np.allclose(self.dists[i].cov,
                                                                                                other.dists[i].cov)
         return res
+
+    def __len__(self):
+        return self.n_gaussians
