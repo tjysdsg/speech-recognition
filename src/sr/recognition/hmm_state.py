@@ -49,13 +49,17 @@ def mahalanobis(v1, v2, variance):
 
 class HMMState:
     def __init__(self):
-        pass
+        import uuid
+        self.id = uuid.uuid4().int
 
     def evaluate(self, x):
         raise NotImplemented()
 
     def __eq__(self, other):
         raise NotImplemented()
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class NES(HMMState):
@@ -66,7 +70,10 @@ class NES(HMMState):
         return 0
 
     def __eq__(self, other):
-        return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 class GMM(HMMState):
@@ -121,7 +128,7 @@ class GMM(HMMState):
                 print("EM converged at iteration:", iter)
                 break
             else:
-                print("EM iteration:", str(iter), end="\r")
+                print("EM iteration:", str(iter), end="\r", flush=True)
                 self.mu_old[:n_gaussians, :] = mu
                 self.sigma_old[:n_gaussians, :] = sigma
                 self.w_old[:n_gaussians] = w
@@ -142,3 +149,6 @@ class GMM(HMMState):
 
     def __len__(self):
         return self.n_gaussians
+
+    def __hash__(self):
+        return hash(self.id)
