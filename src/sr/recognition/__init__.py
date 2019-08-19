@@ -1,4 +1,4 @@
-from .dtw import *
+from .decode import *
 from .hmm import *
 from .kmeans import *
 from .model_graph import *

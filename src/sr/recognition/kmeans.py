@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .dtw import dtw, dtw1
+from .decode import dtw, dtw1
 import numpy as np
 
 
