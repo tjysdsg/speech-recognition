@@ -97,9 +97,9 @@ def test(models, folder, file_patterns):
 
 def aurora_continuous_train():
     models = []
-    for digit in digit_names:
+    for digit in range(11):
         # TODO: use command line argument for input model path
-        file = open('models-4gaussians-em/' + digit + '.pkl', 'rb')
+        file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
         models.append(pickle.load(file))
         file.close()
 
