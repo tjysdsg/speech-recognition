@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .model_graph import *
-from .dtw import *
-from .hmm import *
+from .dtw import sentence_viterbi
+from .hmm import HMM
 from itertools import chain
 import os
 import pickle
