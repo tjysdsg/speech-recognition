@@ -29,7 +29,7 @@ def continuous_train(data, models, lables, use_gmm=True, n_gaussians=4, use_em=T
             lb = lables[i]
             model_graphs[i].add_non_emitting_state()
             for digit in lb:
-                model_graphs[i].add_model(models[digit], digit)
+                model_graphs[i].add_model(old_models[digit], digit)
                 model_graphs[i].add_non_emitting_state()
 
         for i in range(data_len):
