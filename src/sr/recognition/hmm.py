@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from .decode import dtw, dtw1
+from .decode import dtw, decode_hmm_states
 from .kmeans import kmeans, skmeans, align_gmm_states
-from .gmm import GMM, mahalanobis
+from .hmm_state import GMM, mahalanobis
 import numpy as np
 
 
@@ -48,6 +48,7 @@ class HMM:
         self.gmm_states = None
 
     def __getitem__(self, item):
+        assert self.use_gmm == True
         if type(item) is int or type(item) is slice:
             return self.gmm_states[item]
         else:
@@ -127,7 +128,7 @@ class HMM:
         :return: cost/score/probability.
         """
         if self.use_gmm:
-            costs, _ = dtw1(x, self.gmm_states, self.transitions)
+            costs, _ = decode_hmm_states(x, self.gmm_states, self.transitions)
         else:
             costs, _ = dtw(x, self.mu, mahalanobis, self.transitions, self.sigma)
         return costs[-1, -1]

@@ -97,9 +97,11 @@ def test(models, folder, file_patterns):
 
 def aurora_continuous_train():
     models = []
-    for digit in range(11):
+    for digit in digit_names:
+        # for digit in range(11):
         # TODO: use command line argument for input model path
-        file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
+        # file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
+        file = open('models-4gaussians-em/' + str(digit) + '.pkl', 'rb')
         models.append(pickle.load(file))
         file.close()
 
@@ -116,17 +118,8 @@ def aurora_continuous_train():
     if not os.path.isdir('cache'):
         os.mkdir('cache')
 
-    data_hash = hashlib.md5("".join(filenames).encode()).hexdigest()
-    if os.path.isfile('cache/cache.meta'):
-        # compare hash value of labels to the value in cache.meta
-        meta_file = open('cache/cache.meta', 'rb')
-        meta_data = pickle.load(meta_file)
-        meta_file.close()
-        # the cache is clean only if data_hash didn't change, otherwise cache is dirty
-        if data_hash == meta_data['data_hash']:
-            use_cache = True
-    else:
-        meta_data = {'data_hash': data_hash}
+    if os.path.isfile('cache/data.pkl'):
+        use_cache = True
 
     if use_cache:
         print('using cache/data.pkl')
@@ -139,9 +132,5 @@ def aurora_continuous_train():
         f = open('cache/data.pkl', 'wb')
         pickle.dump(data, f)
         f.close()
-        # save meta data to file
-        meta_file = open('cache/cache.meta', 'wb')
-        pickle.dump(meta_data, meta_file)
-        meta_file.close()
 
     continuous_train(data, models, labels)
