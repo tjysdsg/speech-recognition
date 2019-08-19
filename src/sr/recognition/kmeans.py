@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from .dtw import dtw, dtw1
 import numpy as np
-from .dtw import *
 
 
 def calc_variance(data):

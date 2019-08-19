@@ -116,7 +116,6 @@ def aurora_continuous_train():
     if not os.path.isdir('cache'):
         os.mkdir('cache')
 
-    import inspect
     data_hash = hashlib.md5("".join(filenames).encode()).hexdigest()
     if os.path.isfile('cache/cache.meta'):
         # compare hash value of labels to the value in cache.meta
