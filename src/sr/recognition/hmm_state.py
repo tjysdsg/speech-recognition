@@ -3,6 +3,10 @@ import numpy as np
 
 
 class MultivariateNormal:
+    """
+    Multivariate normal (gaussian) distribution using the diagonal of its covariance matrix.
+    """
+
     def __init__(self, mean, cov):
         self.mean = mean
         self._cov = cov
@@ -42,15 +46,27 @@ class MultivariateNormal:
 
 
 def mahalanobis(v1, v2, variance):
+    """
+    Mahalanobis distance function. FIXME consider moving similar math utility function to a seperate folder?
+    :param v1: the first 1d array.
+    :param v2: the second 1d array.
+    :param variance: 1d array, variance.
+    :return: scalar, the mahalanobis distance.
+    """
     D = len(variance)
     m = (v1 - v2)
     return 0.5 * np.log((2 * np.pi) ** D * np.prod(variance)) + 0.5 * np.sum(m / variance * m)
 
 
 class HMMState:
+    """
+    Base class for all HMM states.
+    """
+
     def __init__(self):
         import uuid
         self.id = uuid.uuid4().int
+        self.parent = None
 
     def evaluate(self, x):
         raise NotImplemented()
@@ -63,6 +79,11 @@ class HMMState:
 
 
 class NES(HMMState):
+    """
+    Non-emitting state.
+    Mainly used for type() comparison, and it has no other specific functionality.
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -77,6 +98,10 @@ class NES(HMMState):
 
 
 class GMM(HMMState):
+    """
+    Gaussian Mixture Model, using Expectation-Maximization algorithm to update parameters.
+    """
+
     def __init__(self, mu, sigma, n_gaussians):
         super().__init__()
         self.n_gaussians = n_gaussians

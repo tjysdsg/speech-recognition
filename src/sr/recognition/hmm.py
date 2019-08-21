@@ -56,10 +56,11 @@ class HMM:
 
     def fit(self, ys, n_gaussians, use_gmm=True, use_em=True):
         """Fit the HMM model with a list of training data.
-        :param use_gmm: TODO: add docstring
+        :param use_gmm: if true, use GMM for each of the states, otherwise only use one gaussian distibution for the
+            states.
         :param use_em: if true, use both k-means and Expectation-Maximization algorithm to fit GMM, otherwise only
             use k-means to do it.
-        :param ys: a list of mfcc templates. It cannot be a numpy array since variable length rows in a matrix are
+        :param ys: a list of MFCC templates. It cannot be a numpy array since variable length rows in a matrix are
             not supported.
         :param n_gaussians: the number of gaussian distributions. It should be some power of 2, if not it will be
             converted to previous power of 2.

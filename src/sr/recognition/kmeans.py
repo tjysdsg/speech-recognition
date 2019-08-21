@@ -4,6 +4,11 @@ import numpy as np
 
 
 def calc_variance(data):
+    """
+    Calculate variance of some data.
+    :param data: 2d numpy array.
+    :return: 1d numpy array, the variance.
+    """
     return np.cov(data).diagonal()
 
 
@@ -45,17 +50,18 @@ def segment_data(templates, n_temps, n_segments, seg_starts):
     return segments
 
 
-def calc_transition_costs(templates, seg_lens, max_jump_dist=2):
+def calc_transition_costs(n_temps, seg_lens, max_jump_dist=2):
     """
-    Calculate and construct a dictionary used in dtw()
-    :param templates: a list of templates
-    :param seg_lens: list of length of segments of all templates
+    Calculate and construct transition matrix.
+    :param n_temps: the number of templates
+    :param seg_lens: list of length of segments in each template. For example, seg_lens[i, j] is the length of j-th
+         segment in i-th template
     :param max_jump_dist: maximum distance allowed for a transition to jump across, the default value 2 is optimal in
         most occasions.
-    :return: the transition cost
+    :return: a 2d array, containing the transition cost. The value in its i-th row and j-th column is the cost of
+        transiting from j to i.
     """
     n_segments = seg_lens.shape[1]
-    n_temps = len(templates)
     empty_segs = (seg_lens == 0)
     res = np.full((n_segments, n_segments), np.inf)
     for i in range(n_segments):
@@ -77,7 +83,7 @@ def calc_transition_costs(templates, seg_lens, max_jump_dist=2):
             s += 1
         # number of samples in this segment
         n_all = 0
-        for t in range(len(templates)):
+        for t in range(n_temps):
             n_all += seg_lens[t, i]
         # number of samples which transition to itself
         n_stay = n_all - n_jump
@@ -125,11 +131,12 @@ def skmeans(templates, n_segments, dist_fun=lambda *args: np.linalg.norm(args[0]
     seg_starts = np.add.accumulate(seg_lens, axis=1)[:, :-1]
     seg_lens = seg_lens[:, 1:]
 
+    transition_costs = None
     res, vars = combine_templates(templates, n_temps, n_segments, seg_starts)
     for _ in range(max_iteration):
         # do dtw and align templates
         seg_starts = np.zeros((n_temps, n_segments), dtype=np.int)
-        transition_costs = calc_transition_costs(templates, seg_lens)
+        transition_costs = calc_transition_costs(len(templates), seg_lens)
         for r in range(n_temps):
             # if template contains too few mfcc vectors, we cannot find a path in dtw
             if templates[r].shape[0] < 5:
