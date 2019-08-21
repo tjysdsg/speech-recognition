@@ -8,7 +8,6 @@ import os
 import python_speech_features as psf
 from config import *
 import re
-import hashlib
 
 
 def delta_feature(feat):
@@ -97,13 +96,20 @@ def test(models, folder, file_patterns):
 
 def aurora_continuous_train():
     models = []
+    hmm_index = 0
     for digit in digit_names:
         # for digit in range(11):
         # TODO: use command line argument for input model path
         # file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
         file = open('models-4gaussians-em/' + str(digit) + '.pkl', 'rb')
-        models.append(pickle.load(file))
+        model: HMM = pickle.load(file)
+        # set value of hmm_state.parent to the index of the hmm it belongs to
+        for s in model.gmm_states:
+            s: HMMState = s
+            s.parent = hmm_index
+        models.append(model)
         file.close()
+        hmm_index += 1
 
     # get filenames
     sequence_regex = re.compile('(?<=_)[OZ0-9]+(?=[AB])')

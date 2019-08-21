@@ -1,4 +1,4 @@
-from main import *
+from sr.core import *
 
 
 def cli():

@@ -79,7 +79,8 @@ def dtw(x, y, dist_fun, transitions, variance=None, beam=np.inf):
 
 def decode_hmm_states(x, states, transitions, end_points=None):
     """
-    :param end_points: TODO: add docstring
+    :param end_points: a list of coordinates `[r, c]` that are considered the ending of a state sequence. r is the index
+        of the state sequence, c is the index of the observed sequence.
     :param x: an input
     :param states: a list of hmm states (derived from class HMMStates).
     :param transitions: transition matrix, where `transitions[i,j]` represents the cost for transiting from jth to ith
