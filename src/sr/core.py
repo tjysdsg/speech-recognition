@@ -97,11 +97,12 @@ def test(models, folder, file_patterns):
 def aurora_continuous_train():
     models = []
     hmm_index = 0
-    for digit in digit_names:
-        # for digit in range(11):
+    # for digit in digit_names:
+    for digit in range(11):
         # TODO: use command line argument for input model path
-        # file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
-        file = open('models-4gaussians-em/' + str(digit) + '.pkl', 'rb')
+        file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
+        # file = open('models-4gaussians-em/' + str(digit) + '.pkl', 'rb')
+
         model: HMM = pickle.load(file)
         # set value of hmm_state.parent to the index of the hmm it belongs to
         for s in model.gmm_states:

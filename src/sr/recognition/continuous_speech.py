@@ -145,6 +145,11 @@ def continuous_train(data: List[np.ndarray], models: List[HMM], label_seqs: List
         for mi in range(n_models):
             states = modelidx_state_map[mi]
             for si in range(len(states)):
+                if gmm_data.get(states[si]) is None:
+                    # FIXME
+                    import warnings
+                    warnings.warn("No MFCC data for state", UserWarning)
+                    continue
                 state_data = gmm_data[states[si]]
                 seg_len = 0
                 n_temps = 0
