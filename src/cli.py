@@ -6,15 +6,19 @@ def cli():
     import argparse
     parser = argparse.ArgumentParser(description='CLI for speech recognition functionality.')
     parser.add_argument('action', metavar='ACTION', type=str, nargs=1,
-                        choices=['train', 'test', 'record', 'continuous'],
+                        choices=['isolated_train', 'isolated_test', 'record', 'continuous_train'],
                         help='Action to perform.')
-    parser.add_argument("-d", "--model-directory", default='models-4gaussians-em',
-                        help="Directory which the trained models are stored, or test models are used.")
+    parser.add_argument("-i", "--input", default='models-continuous-4gaussians-em-realign/',
+                        help="Directory which the input models are stored for continuous training, or test models are"
+                             "used. \nIgnored for isolated model training")
+    parser.add_argument("-o", "--output", default='models-continuous-4gaussians-em-realign/',
+                        help="Directory which the trained models are stored")
+    # TODO: use -g and -e for continuous training
     parser.add_argument("-g", "--gmm", help="Use GMM-HMM as the model.", default=False, action='store_true')
     parser.add_argument("-e", "--em", help="Use EM algorithm to train models.", default=False, action='store_true')
     args = parser.parse_args()
 
-    if args.action[0] == 'train':
+    if args.action[0] == 'isolated_train':
         print('training...')
         # data folder location
         folder = os.path.join(data_path, 'train')
@@ -22,14 +26,14 @@ def cli():
             filenames = [os.path.join(folder, f) for f in os.listdir(folder) if
                          re.match('[A-Z]+_' + digit + '[AB].wav', f)]
 
-            train(filenames, args.model_directory, digit, n_segs=5, use_gmm=args.gmm, use_em=args.em)
+            train(filenames, args.output, digit, n_segs=5, use_gmm=args.gmm, use_em=args.em)
 
-    if args.action[0] == 'test':
+    if args.action[0] == 'isolated_test':
         print('testing...')
         # get all the models from pickle files
         models = []
         for digit in digit_names:
-            file = open(os.path.join(args.model_directory, digit + '.pkl'), 'rb')
+            file = open(os.path.join(args.input, digit + '.pkl'), 'rb')
             models.append(pickle.load(file))
             file.close()
         # get file patterns for each digit
@@ -46,7 +50,7 @@ def cli():
         # get all the models from pickle files
         models = []
         for digit in digit_names:
-            file = open(args.model_directory + digit + '.pkl', 'rb')
+            file = open(args.input + digit + '.pkl', 'rb')
             models.append(pickle.load(file))
             file.close()
 
@@ -61,8 +65,8 @@ def cli():
                 best_model = i
         print(best_model)
 
-    if args.action[0] == 'continuous':
-        aurora_continuous_train()
+    if args.action[0] == 'continuous_train':
+        aurora_continuous_train(args.input, args.output)
 
 
 if __name__ == "__main__":
