@@ -54,9 +54,9 @@ def make_HMM(filenames, n_segs, use_gmm, use_em):
     return model
 
 
-def train(filenames, model_folder, model_name, n_segs, use_gmm, use_em):
+def train(filenames, output_path, model_name, n_segs, use_gmm, use_em):
     models = make_HMM(filenames, n_segs, use_gmm=use_gmm, use_em=use_em)
-    file = open(os.path.join(model_folder, model_name + '.pkl'), 'wb')
+    file = open(os.path.join(output_path, model_name + '.pkl'), 'wb')
     pickle.dump(models, file)
 
 
@@ -94,14 +94,12 @@ def test(models, folder, file_patterns):
     return n_passed / n_tests
 
 
-def aurora_continuous_train():
+def aurora_continuous_train(input_path, output_path):
     models = []
     hmm_index = 0
     # for digit in digit_names:
     for digit in range(11):
-        # TODO: use command line argument for input model path
-        file = open('models-continuous-4gaussians-em-realign/' + str(digit) + '.pkl', 'rb')
-        # file = open('models-4gaussians-em/' + str(digit) + '.pkl', 'rb')
+        file = open(input_path + str(digit) + '.pkl', 'rb')
 
         model: HMM = pickle.load(file)
         # set value of hmm_state.parent to the index of the hmm it belongs to
@@ -140,4 +138,4 @@ def aurora_continuous_train():
         pickle.dump(data, f)
         f.close()
 
-    continuous_train(data, models, labels)
+    continuous_train(data, models, labels, output_path)

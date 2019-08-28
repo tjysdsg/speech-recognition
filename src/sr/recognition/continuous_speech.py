@@ -5,7 +5,7 @@ from .hmm_state import GMM, NES, mahalanobis
 from .hmm import HMM
 import os
 import pickle
-from typing import List
+from typing import List, AnyStr
 import copy
 import numpy as np
 
@@ -53,7 +53,8 @@ def build_state_sequences(hmms: List[HMM], label_matrix: List[List[int]]):
     return seq, trans, end_state_indices[-1]
 
 
-def continuous_train(data: List[np.ndarray], models: List[HMM], label_seqs: List[List[int]], n_gaussians: int = 4,
+def continuous_train(data: List[np.ndarray], models: List[HMM], label_seqs: List[List[int]], output_path: AnyStr,
+                     n_gaussians: int = 4,
                      n_segments: int = 5,
                      max_iteration: int = 1000):
     # remember old models
@@ -163,9 +164,8 @@ def continuous_train(data: List[np.ndarray], models: List[HMM], label_seqs: List
                 new_models[mi].transitions[si, si] = -np.log(1 - p_jump)
 
         # save new models to files
-        # TODO: use command line argument for output model path
         for i in range(len(new_models)):
-            file = open(os.path.join('models-continuous-4gaussians-em-realign', str(i) + '.pkl'), 'wb')
+            file = open(os.path.join(output_path, str(i) + '.pkl'), 'wb')
             pickle.dump(new_models[i], file)
             file.close()
         # check if converged
