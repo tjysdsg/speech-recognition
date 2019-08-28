@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-# TODO: Fix imports, avoid using `import *'
+import numpy as np
+import pickle
+from typing import List
+import os, re
+from config import digit_names, data_path, filename_index_map
 from sr import *
 
 if __name__ == "__main__":
