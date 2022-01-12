@@ -22,13 +22,13 @@ def delta_feature(feat):
     return delta
 
 
-# def load_wav_as_mfcc(path):
-#     fb, mfcc = mfcc_features(path)
-#     df = delta_feature(mfcc)
-#     ddf = delta_feature(df)
-#     features = np.concatenate([mfcc, df, ddf], axis=1)
-#     features = standardize(features)
-#     return features
+def load_wav_as_mfcc1(path):
+    fb, mfcc = mfcc_features(path)
+    df = delta_feature(mfcc)
+    ddf = delta_feature(df)
+    features = np.concatenate([mfcc, df, ddf], axis=1)
+    features = standardize(features)
+    return features
 
 
 def load_wav_as_mfcc(path):
