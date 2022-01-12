@@ -3,7 +3,6 @@ import scipy
 import time
 import wave
 import numpy as np
-from .. import *
 
 
 def decode_audio_stream(data, dtype=np.int16):

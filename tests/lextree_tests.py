@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from sr.langmodel import *
 import os
-import numpy as np
 import pandas as pd
 
 
-def spellcheck_tests():
+def test_spellcheck():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     dictionary = pd.read_csv(os.path.join(dir_path, 'test_data', 'dict1.txt'))['words'].values.tolist()
     tree = lextree_from_words(dictionary)
