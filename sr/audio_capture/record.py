@@ -1,3 +1,5 @@
+import os.path
+
 import pyaudio
 import scipy
 import time
@@ -95,8 +97,10 @@ class AudioRecorder:
         self.started_speech = False
 
         # cache data across frames
-        self.cache_data = {'background': 0, 'silence time': 0, 'speech time': 0, 'frame count': 0,
-                           'boundary sample count': 0}
+        self.cache_data = {
+            'background': 0, 'silence time': 0, 'speech time': 0, 'frame count': 0,
+            'boundary sample count': 0
+        }
         self.curr_delay = 0
 
         self.speech_start_index = 0
@@ -261,6 +265,10 @@ class AudioRecorder:
 
 
 def record(file=None):
+    # make sure the directory that contains the output file exists
+    os.makedirs(os.path.dirname(file), exist_ok=True)
+
+    # record
     ar = AudioRecorder()
     ar.start_recording()
     if file:

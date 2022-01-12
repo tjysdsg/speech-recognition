@@ -1,6 +1,7 @@
-
-# Created by https://www.gitignore.io/api/vim,python
-# Edit at https://www.gitignore.io/?templates=vim,python
+.idea/
+.vs/
+*build*/
+data/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -146,11 +147,3 @@ tags
 # Persistent undo
 [._]*.un~
 
-# End of https://www.gitignore.io/api/vim,python
-#
-.idea/
-.vs/
-*build*/
-src/cache/*
-src/train/*
-src/test/*
