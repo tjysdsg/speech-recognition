@@ -22,7 +22,7 @@ class AudioFrame:
 
     def calc_energy(self):
         n = len(self.data)
-        self.data = self.data * np.hamming(n)
+        self.data = np.asarray(self.data)
         sum = np.sum(self.data ** 2)
         if sum <= 1:
             self.energy = 0
